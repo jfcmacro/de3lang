@@ -12,13 +12,13 @@ module EAFIT.De3Lang.CFG
 import qualified Data.Set as Set
 import qualified Data.Map as Map
 
-newtype Term = Term String deriving (Show, Eq, Enum)
+newtype Term = Term String deriving (Show, Eq)
 
-newtype NoTerm = NoTerm String deriving (Show, Eq, Enum)
+newtype NoTerm = NoTerm String deriving (Show, Eq)
     
 data Symbol = SymTerm Term
             | SymNoTerm NoTerm
-              deriving (Show, Eq, Enum)
+              deriving (Show, Eq)
 
 data CFG = CFG { noTerms :: Set.Set NoTerm,
                  terms   :: Set.Set Term,

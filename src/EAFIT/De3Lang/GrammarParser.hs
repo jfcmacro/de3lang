@@ -5,12 +5,14 @@ import EAFIT.De3Lang.CFG(Term(..),
                          Symbol(..),
                          CFG(..))
 import Text.ParserCombinators.Parsec
+ 
+pNoTerm :: GenParser Char st NoTerm
+pNoTerm  =
+    do c  <- upper 
+       return $ NoTerm [c]
 
-parserNoTerm :: GenParser Char st String
-parserNoTerm  =
-    do c <- upper
-       return [c]
+pTerm :: GenParser Char st Term
+pTerm =
+    do c  <- lower
+       return $ Term [c]
 
-parserTerm :: 
-
-    

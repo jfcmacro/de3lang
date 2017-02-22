@@ -2,23 +2,25 @@ name:                de3lang
 version:             0.1.0.0
 -- synopsis:
 -- description:
-homepage:            https://github.com/githubuser/de3lang#readme
+homepage:            https://github.com/jfcmacro/de3lang#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2017 Author name here
-category:            Web
+author:              Juan Francisco Cardona Mc'Cormick
+maintainer:          jfcmacro@gmail.com
+copyright:           2017 Juan Francisco Cardona Mc'Cormick
+category:            Language
 build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lib
+  exposed-modules:     EAFIT.De3Lang,
+                       EAFIT.De3Lang.CFG,
+                       EAFIT.De3Lang.GrammarParser
   build-depends:       base >= 4.7 && < 5,
-                       containers,
-                       parserc
+                       containers >= 0.5.7.1,
+                       parsec >= 3.1.11
   default-language:    Haskell2010
 
 executable de3lang
