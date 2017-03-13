@@ -1,8 +1,10 @@
-module EAFIT.De3Lang.GrammarParser(pCFGFile
-                                  ,pNoTerm
-                                  ,pSyms
-                                  ,pDrvFile
-                                  ,pTreeFile) where
+module EAFIT.De3Lang.GrammarParser-- (pCFGFile
+                                  -- ,pDrvFile
+                                  -- ,pTreeFile
+                                  -- ,module Text.ParserCombinators.Parsec
+                                  -- ,pSymbols
+                                  -- )
+    where
 
 import EAFIT.De3Lang.CFG(Term(..),
                          NoTerm(..),
@@ -15,76 +17,82 @@ import qualified Data.Set as Set
 import qualified Data.Map as Map
  
 pNoTerm :: GenParser Char st NoTerm
-pNoTerm  =
-    do c  <- upper 
-       return $ NoTerm [c]
+pNoTerm  = NoTerm <$> pure <$> upper
+    -- do c  <- upper 
+    --    return $ NoTerm [c]
 
 pTerm :: GenParser Char st Term
-pTerm =
-    do c  <- lower
-       return $ Term [c]
+pTerm = Term <$> pure <$> lower
+    -- do c  <- lower
+    --    return $ Term [c]
 
 pNoTerms :: GenParser Char st [NoTerm]
-pNoTerms = pNoTerm `sepBy` (char ',')
+pNoTerms = pNoTerm `sepBy` (spaces *> char ',')
 
 pTerms :: GenParser Char st [Term]
-pTerms = pTerm `sepBy` (char ',')
+pTerms = pTerm `sepBy` (spaces *> char ',')
 
 pBraces :: GenParser Char st a -> GenParser Char st a
-pBraces = between (char  '{') (char '}')
+pBraces = between (spaces *> char '{')
+                  (spaces *> char '}')
 
 pSym :: GenParser Char st Symbol
-pSym = (pTerm >>= \t -> return $ SymTerm t) <|> (pNoTerm >>= \nt -> return $ SymNoTerm nt)
+pSym = (SymTerm <$> pTerm) <|> (SymNoTerm <$> pNoTerm)
 
 pSyms :: GenParser Char st [Symbol]
-pSyms = many pSym
+pSyms = spaces *> many pSym
 
 pSymbols :: GenParser Char st [[Symbol]]
-pSymbols = pSyms `sepBy` (char '|')
+pSymbols = pSyms `sepBy` (spaces *> char '|')
 
 pPrdSym :: GenParser Char st ()
-pPrdSym = do
-  char '-'
-  char '>'
-  return $ ()
+pPrdSym = string "->" >> return ()
+  -- char '-'
+  -- char '>'
+  -- return $ ()
           
 pProdT :: GenParser Char st (NoTerm ,[[Symbol]])
-pProdT = do
-  nt <- pNoTerm
-  pPrdSym
-  pr <- pSymbols
-  return $ (nt, pr)
+pProdT = (,) <$> (spaces *> pNoTerm)
+             <*  (spaces *> pPrdSym)
+             <*> (spaces *> pSymbols)
+  -- do
+  -- nt <- pNoTerm
+  -- pPrdSym
+  -- pr <- pSymbols
+  -- return $ (nt, pr)
+
 
 pProdTs :: GenParser Char st [(NoTerm, [[Symbol]])]
-pProdTs = pProdT `sepBy` (char ',')
+pProdTs = pProdT `sepBy` (spaces *> char ',')
 
 pProds :: GenParser Char st (Map.Map NoTerm [[Symbol]])
-pProds = do
-  prds <- pProdTs
-  return $ Map.fromList prds
+pProds = Map.fromList <$> pProdTs
+    -- do
+    --   prds <- pProdTs
+    --   return $ Map.fromList prds
          
 pInnerCfg :: GenParser Char st CFG
 pInnerCfg = do
-  nts   <- pBraces pNoTerms
-  char ','
-  ts    <- pBraces pTerms
-  char ','
-  prds  <- pBraces pProds
-  char ','
-  st    <- pNoTerm
+  nts   <- (pBraces pNoTerms)
+  (spaces *> char ',')
+  ts    <- (pBraces pTerms)
+  (spaces *> char ',')
+  prds  <- (pBraces pProds)
+  (spaces *> char ',')
+  st    <- (spaces *> pNoTerm <* spaces)
   return $ CFG { noTerms = Set.fromList nts,
                  terms   = Set.fromList ts,
                  prods   = prds,
                  start   = st }
                  
 pCfg :: GenParser Char st CFG
-pCfg = pBraces pInnerCfg
+pCfg = spaces *> pBraces pInnerCfg <* spaces
 
 pCFGFile :: String -> IO (Either ParseError CFG)
 pCFGFile fname = parseFromFile pCfg fname
   
 pDrv :: GenParser Char st Derivation
-pDrv = pSyms `sepBy` (do { char '='; char '>' })
+pDrv = pSyms `sepBy` (string "=>")
 
 pDrvFile :: String -> IO (Either ParseError Derivation)
 pDrvFile fname = parseFromFile pDrv fname
@@ -94,26 +102,25 @@ pParens = between (char  '(') (char ')')
 
 pChildTerm :: GenParser Char st ParserTree
 pChildTerm = do
-  t <- pParens pTerm
+  t <- pTerm
   return $ ParserTree (SymTerm t) []
 
 pNoTermSubTree :: GenParser Char st ParserTree
-pNoTermSubTree = do
-  nt <- pNoTerm
-  chd <- pChildren
-  return $ ParserTree (SymNoTerm nt) chd
+pNoTermSubTree = do { nt <- pNoTerm;
+                      chd <- pChildren ;
+                      return $ ParserTree (SymNoTerm nt) chd }
 
 pChildNoTerm :: GenParser Char st ParserTree
-pChildNoTerm = pParens pNoTermSubTree
+pChildNoTerm = pNoTermSubTree
   
 pChild :: GenParser Char st ParserTree
-pChild = pChildTerm <|> pChildNoTerm
-
+pChild =  pParens $ (pChildNoTerm
+                     <|> pChildTerm)
 pChildren :: GenParser Char st [ParserTree]
 pChildren = many pChild
 
 pTree :: GenParser Char st ParserTree
-pTree = pChildNoTerm
+pTree = pParens pChildNoTerm
 
 pTreeFile :: String -> IO (Either ParseError ParserTree)
 pTreeFile fname = parseFromFile pTree fname
