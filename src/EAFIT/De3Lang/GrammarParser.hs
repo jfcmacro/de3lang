@@ -1,10 +1,8 @@
-module EAFIT.De3Lang.GrammarParser -- (
-  -- pCFGFile
-  -- ,pDrvFile
-  -- ,pTreeFile
-  -- ,module Text.ParserCombinators.Parsec
-  -- ,pSymbols
-       -- )
+module EAFIT.De3Lang.GrammarParser(pCFGFile
+                                  ,pDrvFile
+                                  ,pTreeFile
+                                  --module Text.ParserCombinators.Parser
+                                  )
     where
 
 import EAFIT.De3Lang.CFG(Term(..),
@@ -79,13 +77,13 @@ pInnerCfg = do
 pCfg :: GenParser Char st CFG
 pCfg = spaces *> pBraces pInnerCfg <* spaces
 
-pCFGFile :: String -> IO (Either ParseError CFG)
+pCFGFile :: FilePath -> IO (Either ParseError CFG)
 pCFGFile fname = parseFromFile pCfg fname
 
 pDrv :: GenParser Char st Derivation
 pDrv = pSyms `sepBy` (string "=>")
 
-pDrvFile :: String -> IO (Either ParseError Derivation)
+pDrvFile :: FilePath -> IO (Either ParseError Derivation)
 pDrvFile fname = parseFromFile pDrv fname
 
 pParens :: GenParser Char st a -> GenParser Char st a
@@ -113,5 +111,5 @@ pChildren = many pChild
 pTree :: GenParser Char st ParserTree
 pTree = pParens pChildNoTerm
 
-pTreeFile :: String -> IO (Either ParseError ParserTree)
+pTreeFile :: FilePath -> IO (Either ParseError ParserTree)
 pTreeFile fname = parseFromFile pTree fname
