@@ -10,10 +10,10 @@ import EAFIT.De3Lang
 
 data Options =  Options { optShowVersion :: Bool
                         , optShowHelp    :: Bool
-                        , optGrammar :: FilePath
-                        , optDerive  :: FilePath
-                        , optTree    :: FilePath
-                                     
+                        , optGrammar     :: FilePath
+                        , optDerive      :: FilePath
+                        , optTree        :: FilePath
+                        , optResumen     :: Bool
                         } deriving Show
 
 defaultOptions :: Options
@@ -22,6 +22,7 @@ defaultOptions = Options { optShowVersion = False
                          , optGrammar     = ""
                          , optDerive      = ""
                          , optTree        = ""
+                         , optResumen     = False
                          }
 
 toGrammar :: String -> Options -> Options
@@ -44,6 +45,9 @@ options =
     , Option ['t'] ["tree"]
       (ReqArg (\s opts -> opts { optTree = s }) "FILE")
       "parser a tree"
+    , Option ['r'] ["resumen"]
+      (NoArg (\opts -> opts { optResumen = True }))
+      "resumen options"
     ]
 
 compilerOpts :: [String] -> IO Options
@@ -54,13 +58,14 @@ compilerOpts argv =
     where header = "Usage: de3lang [OPTION...]"
 
 processStaticOptions :: Options -> IO ()
-processStaticOptions opts =
-  if optShowVersion opts
-  then do hPutStrLn stdout $ "de3lang version: " ++ (showVersion version)
-          exitSuccess
-  else if optShowHelp opts
-       then showHelp
-       else return ()
+processStaticOptions opts 
+   | optShowVersion opts    = do hPutStrLn stdout $ "de3lang version: " ++ (showVersion version)
+                                 exitSuccess
+   | optShowHelp opts       = showHelp
+   | optResumen  opts       = do putStrLn $ "grammar=" ++ optGrammar opts
+                                 putStrLn $ "derivation=" ++ optDerive opts
+                                 putStrLn $ "tree=" ++ optTree opts 
+   | otherwise              = return ()
 
 showHelp :: IO ()
 showHelp = do
@@ -77,17 +82,17 @@ processGrammar opts = case optGrammar opts of
                                    Right cfg -> hPutStrLn stdout (show cfg)
 
 processDerivation :: Options -> IO ()
-processDerivation opts = case optGrammar opts of
-                           "" -> return ()
+processDerivation opts = case optDerive opts of
+                           "" -> return () 
                            f  -> do ei <- pDrvFile f
                                     case ei of
                                       Left er  -> hPutStrLn stderr (show er)
                                       Right dr -> hPutStrLn stdout (show dr)
 
 processTree :: Options -> IO ()
-processTree opts = case optGrammar opts of
+processTree opts = case optTree opts of
                      "" -> return ()
-                     f  -> do ei <- pDrvFile f
+                     f  -> do ei <- pTreeFile f
                               case ei of
                                 Left er  -> hPutStrLn stderr (show er)
                                 Right tr -> hPutStrLn stdout (show tr)

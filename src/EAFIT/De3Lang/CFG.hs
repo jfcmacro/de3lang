@@ -30,4 +30,3 @@ type Derivation = [[Symbol]]
 
 data ParserTree = ParserTree Symbol [ParserTree]
                 deriving (Show)
-

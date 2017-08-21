@@ -1,7 +1,6 @@
 module EAFIT.De3Lang.GrammarParser(pCFGFile
                                   ,pDrvFile
                                   ,pTreeFile
-                                  --module Text.ParserCombinators.Parser
                                   )
     where
 
@@ -81,13 +80,14 @@ pCFGFile :: FilePath -> IO (Either ParseError CFG)
 pCFGFile fname = parseFromFile pCfg fname
 
 pDrv :: GenParser Char st Derivation
-pDrv = pSyms `sepBy` (string "=>")
+pDrv = (spaces *> pSyms) `sepBy` (spaces *> string "=>")
+       <?> "Derivation error"
 
 pDrvFile :: FilePath -> IO (Either ParseError Derivation)
-pDrvFile fname = parseFromFile pDrv fname
+pDrvFile fname = parseFromFile (pDrv <* spaces) fname
 
 pParens :: GenParser Char st a -> GenParser Char st a
-pParens = between (char  '(') (char ')')
+pParens = between (spaces *> char  '(') (spaces *> char ')')
 
 pChildTerm :: GenParser Char st ParserTree
 pChildTerm = do
@@ -95,9 +95,10 @@ pChildTerm = do
   return $ ParserTree (SymTerm t) []
 
 pNoTermSubTree :: GenParser Char st ParserTree
-pNoTermSubTree = do { nt <- pNoTerm;
-                      chd <- pChildren ;
-                      return $ ParserTree (SymNoTerm nt) chd }
+pNoTermSubTree =
+    do nt <- pNoTerm
+       chd <- pChildren
+       return $ ParserTree (SymNoTerm nt) chd
 
 pChildNoTerm :: GenParser Char st ParserTree
 pChildNoTerm = pNoTermSubTree
@@ -105,6 +106,7 @@ pChildNoTerm = pNoTermSubTree
 pChild :: GenParser Char st ParserTree
 pChild =  pParens $ (pChildNoTerm
                      <|> pChildTerm)
+
 pChildren :: GenParser Char st [ParserTree]
 pChildren = many pChild
 
