@@ -10,10 +10,10 @@ import EAFIT.De3Lang.CFG(Term(..),
                          CFG(..),
                          Derivation,
                          ParserTree(..))
--- import Text.ParserCombinators.Parsec
 import Text.Parsec
 import qualified Text.Parsec.Token as P
 import Text.Parsec.Language(emptyDef)
+import Text.ParserCombinators.Parsec
 import qualified Data.Set as Set
 import qualified Data.Map as Map
 
@@ -119,8 +119,7 @@ import qualified Data.Map as Map
 -- pTreeFile :: FilePath -> IO (Either ParseError ParserTree)
 -- pTreeFile fname = parseFromFile pTree fname
 lexer      = P.makeTokenParser emptyDef {
-               P.commentLine = "#",
-               P.
+               P.commentLine = "#"
              }
 
 parens     = P.parens lexer
@@ -146,21 +145,20 @@ pTerm :: GenParser Char st Term
 pTerm = Term <$> identifier
 
 pTerms :: GenParser Char st [Term]
-pTerms = braces pTerm'
+pTerms = braces pTerms'
     where pTerms' = sepBy1 pTerm comma
 
-pProdT = GenParser Char st (NoTerm, [[Symbol]])
-pProdT = (,) <$> (lexeme noTerm)
-             <*  (lexeme produce)
-             <*> pSenForms
-    where pSenForms :: GenParser Char st [[Symbol]]
-          pSenForms = sepBy1 pSenForm $ lexeme bar
-
-pSenForm :: GenParser Char st [[Symbol]]
+pSenForm :: GenParser Char st [Symbol]
 pSenForm = many $ lexeme pSym
     where pSym = SymNoTerm <$> pNoTerm
                  <|>
-                 SymTerm pTerm
+                 SymTerm <$> pTerm
+                    
+pProdT :: GenParser Char st (NoTerm, [[Symbol]])
+pProdT = (,) <$> pNoTerm
+         <*  (lexeme produce)
+         <*> pSenForms
+    where pSenForms = sepBy1 pSenForm $ lexeme bar
 
 pProds :: GenParser Char st (Map.Map NoTerm [[Symbol]])
 pProds = Map.fromList <$> braces pProdTs
@@ -169,13 +167,13 @@ pProds = Map.fromList <$> braces pProdTs
 pCfg :: GenParser Char st CFG
 pCfg = braces pInnerCfg
     where pInnerCfg = do
-            nts  <- pNoTerm
+            nts  <- pNoTerms
             comma
-            ts   <- pTerm
+            ts   <- pTerms
             comma
             prds <- pProds
             comma
-            st   <- (braces noTerm)
+            st   <- pNoTerm
             return $ CFG { noTerms = Set.fromList nts,
                            terms   = Set.fromList ts,
                            prods   = prds,
@@ -184,31 +182,30 @@ pCfg = braces pInnerCfg
 pCFGFile :: FilePath -> IO (Either ParseError CFG)
 pCFGFile fname = parseFromFile pCfg fname
 
-
 pDrv :: GenParser Char st Derivation
 pDrv = do
   nts  <- pNoTerm
   drvs <- many1 (derive *> pSenForm)
-  return [SymNoTerm nts] : drvs
+  return ([SymNoTerm nts] : drvs)
 
 pDrvFile :: FilePath -> IO (Either ParseError Derivation)
-pDrvFile fname = parseFromFile prvs fname
+pDrvFile fname = parseFromFile pDrv fname
 
 pChildTerm :: GenParser Char st ParserTree
 pChildTerm = f <$> pTerm
   where f t = ParserTree (SymTerm t) []
 
 pTree :: GenParser Char st ParserTree
-pTree = parens pNoTermSubTree'
+pTree = parens pTree'
     where pTree' = 
               do nt  <- pNoTerm
                  chd <- pChildren
                  return $ ParserTree (SymNoTerm nt) chd
                                
 pChild :: GenParser Char st ParserTree
-pChild = pNoTermSubTree <|> pChildTerm
+pChild = pTree <|> pChildTerm
 
-pChildren = many Child
+pChildren = many pChild
 
 pTreeFile :: FilePath -> IO (Either ParseError ParserTree)
 pTreeFile fname = parseFromFile pTree fname

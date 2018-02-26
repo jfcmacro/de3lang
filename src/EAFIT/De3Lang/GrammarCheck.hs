@@ -67,4 +67,4 @@ cfgEachLhsIsReached cfg = let a = start cfg
                               v = noTerms cfg
                               s = terms cfg
                               p = prods cfg
-                          in
+                          in undefined
