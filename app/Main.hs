@@ -99,6 +99,7 @@ processTree opts = case optTree opts of
                                             
 main :: IO ()
 main = do
+  hPutStrLn stdout "Staring De3Lang"
   opts <- (getArgs >>= compilerOpts)
   processStaticOptions opts
   processGrammar opts

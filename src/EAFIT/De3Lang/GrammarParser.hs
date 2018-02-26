@@ -118,10 +118,22 @@ import qualified Data.Map as Map
 
 -- pTreeFile :: FilePath -> IO (Either ParseError ParserTree)
 -- pTreeFile fname = parseFromFile pTree fname
-lexer      = P.makeTokenParser emptyDef {
-               P.commentLine = "#"
+grammarDef = emptyDef {
+               P.commentLine = "#",
+               P.reservedNames = ["identifier",
+                                  "charLiteral",
+                                  "stringLiteral",
+                                  "natural",
+                                  "integer",
+                                  "float",
+                                  "naturalFloat",
+                                  "decimal",
+                                  "hexadecimal",
+                                  "octal"]
              }
 
+
+lexer      = P.makeTokenParser grammarDef
 parens     = P.parens lexer
 braces     = P.braces lexer
 identifier = P.identifier lexer
@@ -133,6 +145,10 @@ bar        = P.symbol lexer "|"
 produce    = P.symbol lexer ":="
 derive     = P.symbol lexer "=>"
 lexeme     = P.lexeme lexer
+term       = P.stringLiteral lexer
+termLiteral = P.reserved lexer
+termLiterals = map f $ P.reservedNames grammarDef
+    where f n = n <$ termLiteral n
 
 pNoTerm :: GenParser Char st NoTerm
 pNoTerm = NoTerm <$> lexeme noTerm
@@ -142,7 +158,8 @@ pNoTerms = braces pNoTerms'
     where pNoTerms' = sepBy1 pNoTerm comma
 
 pTerm :: GenParser Char st Term
-pTerm = Term <$> identifier
+pTerm = Term <$> term
+     <|> TermLit <$> choice termLiterals
 
 pTerms :: GenParser Char st [Term]
 pTerms = braces pTerms'
@@ -173,7 +190,7 @@ pCfg = braces pInnerCfg
             comma
             prds <- pProds
             comma
-            st   <- pNoTerm
+            st   <- braces pNoTerm
             return $ CFG { noTerms = Set.fromList nts,
                            terms   = Set.fromList ts,
                            prods   = prds,

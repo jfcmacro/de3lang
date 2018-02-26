@@ -12,7 +12,9 @@ module EAFIT.De3Lang.CFG
 import qualified Data.Set as Set
 import qualified Data.Map as Map
 
-newtype Term = Term String deriving (Show, Eq, Ord)
+data Term = Term String
+          | TermLit String
+            deriving (Show, Eq, Ord)
 
 newtype NoTerm = NoTerm String deriving (Show, Eq, Ord)
     
