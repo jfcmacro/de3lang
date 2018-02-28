@@ -126,28 +126,34 @@ grammarDef = emptyDef {
                                   "natural",
                                   "integer",
                                   "float",
-                                  "naturalFloat",
                                   "decimal",
                                   "hexadecimal",
                                   "octal"]
              }
 
-
-lexer      = P.makeTokenParser grammarDef
-parens     = P.parens lexer
-braces     = P.braces lexer
-identifier = P.identifier lexer
-whitespace = P.whiteSpace lexer
-integer    = P.integer lexer
-comma      = P.comma lexer
-noTerm     = between (char '<') (char '>') identifier
-bar        = P.symbol lexer "|"
-produce    = P.symbol lexer ":="
-derive     = P.symbol lexer "=>"
-lexeme     = P.lexeme lexer
-term       = P.stringLiteral lexer
-termLiteral = P.reserved lexer
-termLiterals = map f $ P.reservedNames grammarDef
+lexer         = P.makeTokenParser grammarDef
+parens        = P.parens lexer
+braces        = P.braces lexer
+identifier    = P.identifier lexer
+charLiteral   = P.charLiteral lexer
+stringLiteral = P.stringLiteral lexer
+natural       = P.natural lexer
+integer       = P.integer lexer
+float         = P.natural lexer
+decimal       = P.decimal lexer
+hexadecimal   = P.hexadecimal lexer
+octal         = P.octal lexer
+whitespace    = P.whiteSpace lexer
+integer'      = P.integer lexer
+comma         = P.comma lexer
+noTerm        = between (char '<') (char '>') identifier
+bar           = P.symbol lexer "|"
+produce       = P.symbol lexer ":="
+derive        = P.symbol lexer "=>"
+lexeme        = P.lexeme lexer
+term          = P.stringLiteral lexer
+termLiteral   = P.reserved lexer
+termLiterals  = map f $ P.reservedNames grammarDef
     where f n = n <$ termLiteral n
 
 pNoTerm :: GenParser Char st NoTerm
@@ -170,6 +176,12 @@ pSenForm = many $ lexeme pSym
     where pSym = SymNoTerm <$> pNoTerm
                  <|>
                  SymTerm <$> pTerm
+
+-- pSenForm :: GenParser Char st [Symbol]
+-- pSenForm = many $ lexeme pSym
+--     where pSym = SymNoTerm <$> pNoTerm
+--                  <|>
+--                  SymTerm <$> pTerm
                     
 pProdT :: GenParser Char st (NoTerm, [[Symbol]])
 pProdT = (,) <$> pNoTerm

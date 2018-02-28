@@ -1,7 +1,7 @@
 name:                de3lang
 version:             0.1.0.3
 synopsis:            A meta-language for describe meta-languages.
--- description:
+description:         de3lang is a simple to manage context free grammars, derivate from them and create derivation trees.
 homepage:            https://github.com/jfcmacro/de3lang#readme
 license:             BSD3
 license-file:        LICENSE
