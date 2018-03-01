@@ -126,29 +126,48 @@ grammarDef = emptyDef {
                                   "natural",
                                   "integer",
                                   "float",
-                                  "naturalFloat",
                                   "decimal",
                                   "hexadecimal",
                                   "octal"]
              }
 
 
-lexer      = P.makeTokenParser grammarDef
-parens     = P.parens lexer
-braces     = P.braces lexer
-identifier = P.identifier lexer
-whitespace = P.whiteSpace lexer
-integer    = P.integer lexer
-comma      = P.comma lexer
-noTerm     = between (char '<') (char '>') identifier
-bar        = P.symbol lexer "|"
-produce    = P.symbol lexer ":="
-derive     = P.symbol lexer "=>"
-lexeme     = P.lexeme lexer
-term       = P.stringLiteral lexer
+lexer       = P.makeTokenParser grammarDef
+parens      = P.parens lexer
+braces      = P.braces lexer
+identifier  = P.identifier lexer
+whitespace  = P.whiteSpace lexer
+integer     = P.integer lexer
+charLit     = P.charLiteral lexer
+stringLit   = P.stringLiteral lexer
+natural     = P.natural lexer
+float       = P.float lexer
+octal       = P.octal lexer
+hexadecimal = P.hexadecimal lexer 
+comma       = P.comma lexer
+noTerm      = between (char '<') (char '>') identifier
+bar         = P.symbol lexer "|"
+produce     = P.symbol lexer ":="
+derive      = P.symbol lexer "=>"
+lexeme      = P.lexeme lexer
+term        = P.stringLiteral lexer
 termLiteral = P.reserved lexer
 termLiterals = map f $ P.reservedNames grammarDef
     where f n = n <$ termLiteral n
+
+gpt :: Term -> GenParser Char st Term
+gpt (Term s)             = Term <$> term s
+gpt (TermLit s)
+  | s == "identifier"    = TermIdent <$> identifier
+  | s == "charLiteral"   = TermChar <$> charLit
+  | s == "stringLiteral" = TermStringLit <$> stringLit
+  | s == "natural"       = TermNat <$> natural
+  | s == "integer"       = TermInt <$> integer
+  | s == "float"         = TermDouble <$> float
+  | s == "decimal"       = TermDec <$> decimal
+  | s == "hexadecimal"   = TermHex <$> hexadecimal
+  | s == "octal"         = TermOctal <$> octal
+gpt _                    = undefined
 
 pNoTerm :: GenParser Char st NoTerm
 pNoTerm = NoTerm <$> lexeme noTerm
@@ -199,6 +218,9 @@ pCfg = braces pInnerCfg
 pCFGFile :: FilePath -> IO (Either ParseError CFG)
 pCFGFile fname = parseFromFile pCfg fname
 
+pDrvLit :: CFG -> [GenParser Char st Term]
+pDrvLit cfg = let pTerms = terms cfg
+              in map 
 pDrv :: GenParser Char st Derivation
 pDrv = do
   nts  <- pNoTerm

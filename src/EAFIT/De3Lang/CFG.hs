@@ -14,6 +14,17 @@ import qualified Data.Map as Map
 
 data Term = Term String
           | TermLit String
+          | TermCharLit Char
+          | TermStringLit String
+          | TermNat Integer
+          | TermInt Integer
+          | TermDouble Double
+          | TermIdent String
+          | TermChar  Char
+          | TermHex   Integer
+          | TermNat   Integer
+          | TermDec   Integer
+          | TermOct   Integer
             deriving (Show, Eq, Ord)
 
 newtype NoTerm = NoTerm String deriving (Show, Eq, Ord)
