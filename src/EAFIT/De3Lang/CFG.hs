@@ -22,7 +22,7 @@ data Term = Term String
           | TermIdent String
           | TermChar  Char
           | TermHex   Integer
-          | TermNat   Integer
+         -- | TermNat   Integer
           | TermDec   Integer
           | TermOct   Integer
             deriving (Show, Eq, Ord)

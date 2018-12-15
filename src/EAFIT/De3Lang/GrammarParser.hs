@@ -152,16 +152,16 @@ lexeme        = P.lexeme lexer
 term          = P.stringLiteral lexer
 termLiteral   = P.reserved lexer
 termLiterals  = map f $ P.reservedNames grammarDef
+    where f n = n <$ termLiteral n
 decimal       = P.decimal lexer
 integer'      = P.integer lexer
-    where f n = n <$ termLiteral n
 
 gpt :: Term -> GenParser Char st Term
-gpt (Term s)             = Term <$> term s
+gpt (Term s)             = Term <$> pTerm 
 gpt (TermLit s)
   | s == "identifier"    = TermIdent <$> identifier
   | s == "charLiteral"   = TermChar <$> charLit
-  | s == "stringLiteral" = TermStringLit <$> stringLit
+  | s == "stringLiteral" = TermStringLit <$> stringLiteral
   | s == "natural"       = TermNat <$> natural
   | s == "integer"       = TermInt <$> integer
   | s == "float"         = TermDouble <$> float
