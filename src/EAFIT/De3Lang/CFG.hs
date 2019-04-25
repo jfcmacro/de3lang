@@ -28,7 +28,7 @@ data Term = Term String
             deriving (Show, Eq, Ord)
 
 newtype NoTerm = NoTerm String deriving (Show, Eq, Ord)
-    
+
 data Symbol = SymTerm Term
             | SymNoTerm NoTerm
               deriving (Show, Eq, Ord)

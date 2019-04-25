@@ -22,7 +22,7 @@ cfgIsWellDef cfg
                                                      v = noTerms cfg
                                                      s = terms cfg
                                                      p = prods cfg
-                                                     pwd = M.foldrWithKey (isPWD v s) True p 
+                                                     pwd = M.foldrWithKey (isPWD v s) True p
                                                  in pwd
     where  isRWD v s (SymTerm t) r    = r && S.member t s
            isRWS v s (SymNoTerm nt) r = r && S.member nt v
@@ -32,7 +32,7 @@ rhsIsOnlyTerms :: [Symbol] -> Bool
 rhsIsOnlyTerms = foldr isTerm True
     where isTerm (SymTerm _)   r = r && True
           isTerm (SymNoTerm _) r = r && False
-               
+
 anyTerminalRule :: [[Symbol]] -> Bool
 anyTerminalRule = any rhsIsOnlyTerms
 
@@ -51,7 +51,7 @@ cfgIsClean' p def' = let def'' = M.foldrWithKey lhsPrdTerms def' p
                         else cfgIsClean' p def''
     where  lhsPrdTerms lhs rhss r =
                if anyTerminalRuleGen r rhss then S.insert lhs r else r
-                  
+
 cfgIsClean :: CFG -> Bool
 cfgIsClean cfg = let a = start cfg
                      v = noTerms cfg
@@ -61,10 +61,12 @@ cfgIsClean cfg = let a = start cfg
                  in cfgIsClean' p def0 == v
     where lhsIsGen lhs rhss r =
               if anyTerminalRule rhss then S.insert lhs r else r
- 
+
+
 cfgEachLhsIsReached :: CFG -> Bool
 cfgEachLhsIsReached cfg = let a = start cfg
                               v = noTerms cfg
                               s = terms cfg
                               p = prods cfg
+			      ss = S.insert S.empty 
                           in undefined
